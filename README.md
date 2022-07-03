@@ -11,6 +11,8 @@ This user script inserts these clickable links into "Your Notes and Highlights" 
 
 [Install Kindle 2 NP3 Script](https://raw.githubusercontent.com/jlc467/np3_user_scripts/main/kindle_to_np3.user.js)
 
+Go to [https://read.amazon.com/](https://read.amazon.com/) and browse to Notes & Highlights
+
 ![Screen Shot 2022-07-03 at 2 47 24 PM](https://user-images.githubusercontent.com/6405557/177053220-1094d89f-1042-493c-95ce-0ce34866f829.png)
 
 
