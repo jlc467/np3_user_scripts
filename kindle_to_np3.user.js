@@ -83,7 +83,7 @@
         annotationElement.appendChild(
           getAddSingleHighlightLink(
             annotationMD,
-            currentTitle + " location " + location,
+            `${currentTitle}${location ? ` location ${location}` :''}`,
             authors
           )
         );
@@ -168,19 +168,23 @@
   }
 
   function getMDLinkToNote(note) {
-    let url = getDirectUrlToNote(note);
-    let loc = getLocation(note);
+    try {
+      let url = getDirectUrlToNote(note);
+      let loc = getLocation(note);
 
-    if (url && loc) {
-      return " [loc " + loc + "](" + url + ")";
-    }
-    return "";
+      if (url && loc) {
+        return " [loc " + loc + "](" + url + ")";
+      }
+      return "";
+    } catch (err) {}
   }
 
   function getDirectUrlToNote(note) {
-    let location = getLocation(note);
-    let asin = getBookASIN();
-    return "kindle://book?action=open&asin=" + asin + "&location=" + location;
+    try {
+      let location = getLocation(note);
+      let asin = getBookASIN();
+      return "kindle://book?action=open&asin=" + asin + "&location=" + location;
+    } catch (err) {}
   }
 
   function getAuthors() {
@@ -200,15 +204,17 @@
   // start element / text getters, liable to change
 
   function getLocation(note) {
-    var node = note.querySelector("#annotationHighlightHeader");
-    if (node) {
-      var loc = /Location:\s*([\d,]*)/g.exec(node.textContent);
-      if (loc.length > 0) {
-        return loc[1].replace(",", "");
+    try {
+      var node = note.querySelector("#annotationHighlightHeader");
+      if (node) {
+        var loc = /Location:\s*([\d,]*)/g.exec(node.textContent);
+        if (loc.length > 0) {
+          return loc[1].replace(",", "");
+        }
       }
-    }
 
-    return "";
+      return "";
+    } catch (err) {}
   }
 
   function getBookASIN() {
