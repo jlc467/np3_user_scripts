@@ -285,7 +285,7 @@
 
       // 2) Catch errors
     } catch (err) {
-      console.error("Failed to copy: ", err);
+      //console.error("Failed to copy: ", err);
     }
   }
 
