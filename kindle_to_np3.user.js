@@ -173,7 +173,7 @@
       let loc = getLocation(note);
 
       if (url && loc) {
-        return " [loc " + loc + "](" + url + ")";
+        return " [loc " + loc + "](" + encodeURIComponent(url) + ")";
       }
       return "";
     } catch (err) {}
