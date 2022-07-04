@@ -83,7 +83,7 @@
         annotationElement.appendChild(
           getAddSingleHighlightLink(
             annotationMD,
-            `${currentTitle}${location ? ` location ${location}` :''}`,
+            `${currentTitle}${location ? ` location ${location}` : ""}`,
             authors
           )
         );
@@ -112,13 +112,14 @@
     var a = document.createElement("a");
     var linkText = document.createTextNode("new");
     var textWithAuthor = `Author(s): ${authors}\n${text}`;
+    var textWithFrontMatter = getFrontMatterMeta() + text
     a.appendChild(linkText);
     a.className = "a-size-small a-color-secondary np3";
     a.title =
       "Create note with this highlight in NP3. Title of note will be the title of book.";
     a.href = `noteplan://x-callback-url/addNote?noteTitle=${encodeURIComponent(
       title
-    )}&openNote=yes&text=${encodeURIComponent(textWithAuthor)}`;
+    )}&openNote=yes&text=${encodeURIComponent(textWithFrontMatter)}`;
     return a;
   }
 
@@ -287,6 +288,18 @@
     } catch (err) {
       //console.error("Failed to copy: ", err);
     }
+  }
+
+  function getFrontMatterMeta() {
+    return `
+---
+title: ${currentTitle}
+type: book-note
+Author: ${getAuthorsElement().textContent}
+source: my Kindle highlights
+book: https://www.amazon.com/dp/${getBookASIN() || 'unknown'}
+---
+    `;
   }
 
   setTimeout(() => {
