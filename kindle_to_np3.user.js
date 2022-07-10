@@ -4,8 +4,8 @@
 // @match *://read.amazon.com/*
 // @grant       GM.setValue
 // @grant       GM.getValue
-// @version     2.0
-// @author      -
+// @version     2.1
+// @author      John Collins
 // @description Adds links for creating notes with highlights automatically
 // @downloadURL https://raw.githubusercontent.com/jlc467/np3_user_scripts/main/kindle_to_np3.user.js
 // ==/UserScript==
