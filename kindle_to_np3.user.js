@@ -8,6 +8,7 @@
 // @author      John Collins
 // @description Adds links for creating notes with highlights automatically
 // @downloadURL https://raw.githubusercontent.com/jlc467/np3_user_scripts/main/kindle_to_np3.user.js
+// @updateURL https://raw.githubusercontent.com/jlc467/np3_user_scripts/main/kindle_to_np3.user.js
 // ==/UserScript==
 
 // Credit to these scripts that helped build this:
