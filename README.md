@@ -18,7 +18,7 @@ In addition, it keeps track of which annotations have been exported by saving to
 
 
 
-![Screen Shot 2022-07-03 at 2 47 24 PM](https://user-images.githubusercontent.com/6405557/177053220-1094d89f-1042-493c-95ce-0ce34866f829.png)
+![kindle_to_np3_image](np3_user_scripts/kindle_to_np3.png)
 
 
 
