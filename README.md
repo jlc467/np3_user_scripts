@@ -18,7 +18,7 @@ In addition, it keeps track of which annotations have been exported by saving to
 
 
 
-![kindle_to_np3_image](np3_user_scripts/kindle_to_np3.png)
+![kindle_to_np3_image](kindle_to_np3.png)
 
 
 
