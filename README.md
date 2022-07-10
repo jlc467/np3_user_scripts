@@ -9,6 +9,9 @@ This user script inserts these clickable links into "Your Notes and Highlights" 
 - "append" -- Append annotation(s) (single or all) to an existing note with the book title
 - "copy" -- Copies annotation(s) (single or all) to clipboard
 
+In addition, it keeps track of which annotations have been exported by saving to your User Script extension's local storage.
+
+
 0. Make sure [Violentmonkey Chrome extension](https://chrome.google.com/webstore/detail/violentmonkey/jinjaccalgkegednnccohejagnlnfdag) is installed
 1. [Install Kindle 2 NP3 Script](https://raw.githubusercontent.com/jlc467/np3_user_scripts/main/kindle_to_np3.user.js)
 2. Go to [https://read.amazon.com/](https://read.amazon.com/) and browse to Notes & Highlights
@@ -18,4 +21,4 @@ This user script inserts these clickable links into "Your Notes and Highlights" 
 ![Screen Shot 2022-07-03 at 2 47 24 PM](https://user-images.githubusercontent.com/6405557/177053220-1094d89f-1042-493c-95ce-0ce34866f829.png)
 
 
- 
+

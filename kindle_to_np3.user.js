@@ -2,10 +2,12 @@
 // @name        Kindle Noteplan3 X-Callbacks
 // @namespace   Violentmonkey Scripts
 // @match *://read.amazon.com/*
-// @grant       none
-// @version     1.0
+// @grant       GM.setValue
+// @grant       GM.getValue
+// @version     2.0
 // @author      -
 // @description Adds links for creating notes with highlights automatically
+// @downloadURL https://raw.githubusercontent.com/jlc467/np3_user_scripts/main/kindle_to_np3.user.js
 // ==/UserScript==
 
 // Credit to these scripts that helped build this:
@@ -15,13 +17,15 @@
 (function () {
   var currentTitle;
   var allAnnotationMD = "";
-
+  var exportData = {};
+  var locations = [];
+  var exportElements = [];
   function startScript() {
     setInterval(detectChange, 1000);
   }
 
   // used to detect if user has navigated to new book
-  function detectChange() {
+  async function detectChange() {
     try {
       let newTitle = getTitle();
       if (!newTitle) {
@@ -35,11 +39,14 @@
       if (newTitle !== currentTitle) {
         currentTitle = newTitle;
         //console.log("title changed!");
+        try {
+          exportData = await GM.getValue(getBookASIN(), {});
+        } catch (err) {}
         cleanup();
         addActions();
       }
     } catch (err) {
-      //console.log("detectChange ~ err", err);
+      console.log("detectChange ~ err", err);
     }
   }
 
@@ -47,72 +54,108 @@
   function addActions() {
     var authors = getAuthors();
 
-    getAnnotationsElementArray().forEach((a) => {
-      try {
-        var annotationMD = "";
-
-        const annotationElement = getAnnotationElement(a);
-
-        if (!annotationElement) {
-          // haven't seen this yet but guess it can happen
-          return;
-        }
-
-        var highlightText = getHighlightText(a);
-        var noteText = getNoteText(a);
-        let location = getLocation(a);
-        var link = getMDLinkToNote(a);
-
-        if (noteText) {
-          annotationMD += "\n- " + noteText;
-          if (link) {
-            annotationMD += link;
-          }
-        }
-        if (highlightText) {
-          annotationMD += "\n> " + highlightText.replace("\n", "\n> ");
-          if (link) {
-            annotationMD += link;
-          }
-        }
-
-        allAnnotationMD += annotationMD + "\n";
-
-        appendPipeSeperator(annotationElement);
-
-        annotationElement.appendChild(
-          getAddSingleHighlightLink(
-            annotationMD,
-            `${currentTitle}${location ? ` location ${location}` : ""}`,
-            authors
-          )
-        );
-
-        appendPipeSeperator(annotationElement);
-
-        annotationElement.appendChild(
-          getAddToExistingLink(annotationMD, currentTitle)
-        );
-
-        appendPipeSeperator(annotationElement);
-
-        annotationElement.appendChild(getClipboardLink(annotationMD));
-      } catch (err) {
-        //console.log("getAnnotationsElementArray forEach ~ err", err);
-      }
-    });
+    getAnnotationsElementArray().forEach(renderAnnotation);
 
     addTitleLinks(allAnnotationMD, authors);
   }
 
-  // begin np3 x-callback-url code
+  function renderAnnotation(a) {
+    try {
+      var annotationMD = "";
+
+      const annotationElement = getAnnotationElement(a);
+
+      if (!annotationElement) {
+        // haven't seen this yet but guess it can happen
+        return;
+      }
+      var authors = getAuthors();
+      var highlightText = getHighlightText(a);
+      var noteText = getNoteText(a);
+      var location = getLocation(a);
+      var link = getMDLinkToNote(a);
+      var exportedStatusElement;
+      if (location) {
+        exportedStatusElement = getExportedStatus(location);
+        exportElements.push(exportedStatusElement);
+      }
+
+      if (noteText) {
+        annotationMD += "\n- " + noteText;
+        if (link) {
+          annotationMD += link;
+        }
+      }
+      if (highlightText) {
+        annotationMD += "\n> " + highlightText.replace("\n", "\n> ");
+        if (link) {
+          annotationMD += link;
+        }
+      }
+
+      allAnnotationMD += annotationMD + "\n";
+      if (location) {
+        locations.push(location);
+      }
+      appendPipeSeperator(annotationElement);
+
+      annotationElement.appendChild(
+        getAddSingleHighlightLink(
+          annotationMD,
+          `${currentTitle}${location ? ` location ${location}` : ""}`,
+          authors,
+          location,
+          exportedStatusElement
+        )
+      );
+
+      appendPipeSeperator(annotationElement);
+
+      annotationElement.appendChild(
+        getAddToExistingLink(
+          annotationMD,
+          currentTitle,
+          location,
+          exportedStatusElement
+        )
+      );
+
+      appendPipeSeperator(annotationElement);
+
+      annotationElement.appendChild(getClipboardLink(annotationMD));
+      if (exportedStatusElement) {
+        appendPipeSeperator(annotationElement);
+        annotationElement.appendChild(exportedStatusElement);
+      }
+    } catch (err) {
+      console.log("getAnnotationsElementArray forEach ~ err", err);
+    }
+  }
+
+  // adds links near title of book, uses all annotations for book
+  function addTitleLinks(allAnnotationMD, authors) {
+    const authorsElement = getAuthorsElement();
+    var topLevelLinkContainerElement = document.createElement("div");
+    topLevelLinkContainerElement.appendChild(
+      getAddSingleHighlightLink(allAnnotationMD, currentTitle, authors)
+    );
+    appendPipeSeperator(topLevelLinkContainerElement);
+    topLevelLinkContainerElement.appendChild(getClipboardLink(allAnnotationMD));
+
+    appendPipeSeperator(topLevelLinkContainerElement);
+    topLevelLinkContainerElement.appendChild(getExportedStatus());
+    authorsElement.parentNode.insertBefore(
+      topLevelLinkContainerElement,
+      authorsElement.nextSibling
+    );
+  }
 
   // creates new note
-  function getAddSingleHighlightLink(text, title, authors) {
+  function getAddSingleHighlightLink(text, title, authors, loc, exportStatus) {
     var a = document.createElement("a");
     var linkText = document.createTextNode("new");
     var textWithAuthor = `Author(s): ${authors}\n${text}`;
-    var textWithFrontMatter = getFrontMatterMeta() + text
+    var textWithFrontMatter = getFrontMatterMeta() + text;
     a.appendChild(linkText);
     a.className = "a-size-small a-color-secondary np3";
     a.title =
@@ -120,11 +163,30 @@
     a.href = `noteplan://x-callback-url/addNote?noteTitle=${encodeURIComponent(
       title
     )}&openNote=yes&text=${encodeURIComponent(textWithFrontMatter)}`;
+    if (loc) {
+      a.addEventListener("click", () => {
+        setExport(loc, exportStatus);
+      });
+    } else {
+      a.addEventListener("click", () => {
+        var d = new Date().toISOString();
+        var dRender = new Date(d).toLocaleString();
+        locations.forEach((loc) => {
+          exportData[loc] = d;
+        });
+        exportElements.forEach((ele) => {
+          ele.innerHTML = dRender;
+        });
+        GM.setValue(`${getBookASIN()}`, exportData);
+        document.getElementById("top-export-count").innerHTML =
+          getTopExportCount();
+      });
+    }
     return a;
   }
 
   // appends to existing note
-  function getAddToExistingLink(text, title) {
+  function getAddToExistingLink(text, title, loc, exportStatus) {
     var a = document.createElement("a");
     var linkText = document.createTextNode("append");
     a.appendChild(linkText);
@@ -134,10 +196,13 @@
     a.href = `noteplan://x-callback-url/addText?noteTitle=${encodeURIComponent(
       title
     )}&text=${text}&mode=append`;
+    if (loc) {
+      a.addEventListener("click", () => {
+        setExport(loc, exportStatus);
+      });
+    }
     return a;
   }
-
-  // end np3 x-callback-url code
 
   // copies to clipboard
   function getClipboardLink(text) {
@@ -153,19 +218,11 @@
     return a;
   }
 
-  // adds links near title of book, uses all annotations for book
-  function addTitleLinks(allAnnotationMD, authors) {
-    const authorsElement = getAuthorsElement();
-    var topLevelLinkContainerElement = document.createElement("div");
-    topLevelLinkContainerElement.appendChild(
-      getAddSingleHighlightLink(allAnnotationMD, currentTitle, authors)
-    );
-    appendPipeSeperator(topLevelLinkContainerElement);
-    topLevelLinkContainerElement.appendChild(getClipboardLink(allAnnotationMD));
-    authorsElement.parentNode.insertBefore(
-      topLevelLinkContainerElement,
-      authorsElement.nextSibling
-    );
+  function setExport(loc, exportStatus) {
+    exportData[loc] = new Date().toISOString();
+    exportStatus.innerHTML = new Date(exportData[loc]).toLocaleString();
+    GM.setValue(`${getBookASIN()}`, exportData);
+    document.getElementById("top-export-count").innerHTML = getTopExportCount();
   }
 
   function getMDLinkToNote(note) {
@@ -273,6 +330,8 @@
   function cleanup() {
     // remove elements with np3 class.. seems like they get destroyed by themselves, not necessary.
     allAnnotationMD = "";
+    locations = [];
+    exportElements = [];
   }
 
   function appendPipeSeperator(ele) {
@@ -291,15 +350,47 @@
   }
 
   function getFrontMatterMeta() {
-    return `
----
+    return `---
 title: ${currentTitle}
 type: book-note
 Author: ${getAuthorsElement().textContent}
 source: my Kindle highlights
-book: https://www.amazon.com/dp/${getBookASIN() || 'unknown'}
+book: https://www.amazon.com/dp/${getBookASIN() || "unknown"}
 ---
     `;
+  }
+
+  function getTopExportCount() {
+    let exportCount = Object.keys(exportData).length;
+
+    let neverExportedCount = 0;
+    locations.forEach((loc) => {
+      if (!exportData[loc]) {
+        neverExportedCount++;
+      }
+    });
+
+    var text = !exportCount
+      ? "never exported"
+      : `${neverExportedCount} unexported`;
+    return text;
+  }
+
+  function getExportedStatus(loc) {
+    var a = document.createElement("span");
+    var text = "";
+    if (!loc) {
+      a.id = "top-export-count";
+      text = getTopExportCount();
+    } else {
+      text = exportData[loc]
+        ? `exported ${new Date(exportData[loc]).toLocaleString()}`
+        : "never exported";
+    }
+    var exportText = document.createTextNode(text);
+    a.appendChild(exportText);
+    a.className = "a-size-small a-color-secondary np3";
+    return a;
   }
 
   setTimeout(() => {
