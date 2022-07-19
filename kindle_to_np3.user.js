@@ -4,16 +4,17 @@
 // @match *://read.amazon.com/*
 // @grant       GM.setValue
 // @grant       GM.getValue
-// @version     2.3
+// @version     2.4
 // @author      John Collins
 // @description Adds links for creating notes with highlights automatically
 // @downloadURL https://raw.githubusercontent.com/jlc467/np3_user_scripts/main/kindle_to_np3.user.js
 // @updateURL https://raw.githubusercontent.com/jlc467/np3_user_scripts/main/kindle_to_np3.user.js
 // ==/UserScript==
 
-// Credit to these scripts that helped build this:
-// https://github.com/yanncharlou/GreaseMonkeyKindleNotesExtractor
-// https://github.com/serizawa-jp/roamkit/blob/b3edbbd8aa5fda53abb25e9a32f87dec676ffdf9/bookmarklets/kindle2roam/kindle2roam.js
+// Changelog
+//  2.4 July 18, 2022
+//    Fix: Use kp-annotation-location for annotation location, which works with page numbers
+//    Fix: Kindle URL when using Copy wasn't working, now using decodeURIComponent
 
 (function () {
   var currentTitle;
@@ -214,7 +215,7 @@
     a.title = "Copy to clipboard for NP3";
     a.href = "javascript:void(0);";
     a.addEventListener("click", () => {
-      copyToClipboard(text);
+      copyToClipboard(decodeURIComponent(text));
     });
     return a;
   }
@@ -264,16 +265,15 @@
 
   function getLocation(note) {
     try {
-      var node = note.querySelector("#annotationHighlightHeader");
+      var node = note.querySelector("#kp-annotation-location");
       if (node) {
-        var loc = /Location:\s*([\d,]*)/g.exec(node.textContent);
-        if (loc.length > 0) {
-          return loc[1].replace(",", "");
-        }
+        var loc = node.value;
+        return loc
       }
 
       return "";
     } catch (err) {}
+    return "";
   }
 
   function getBookASIN() {
@@ -398,3 +398,8 @@ book: https://www.amazon.com/dp/${getBookASIN() || "unknown"}
     startScript();
   }, 500);
 })();
+
+
+// Credit to these scripts that helped build this:
+// https://github.com/yanncharlou/GreaseMonkeyKindleNotesExtractor
+// https://github.com/serizawa-jp/roamkit/blob/b3edbbd8aa5fda53abb25e9a32f87dec676ffdf9/bookmarklets/kindle2roam/kindle2roam.js
